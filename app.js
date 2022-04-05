@@ -23,8 +23,23 @@ function main() {
 
     mkLegend(data)
     const bar = mkChart(data)
-    float(bar, data)
-    setTimeout(() => sink(bar, data), TRANSITION_DURATION)
+    
+    addControls(bar, data)
+}
+
+function addControls(bar, data) {
+    const sel = d3.select('#controls')
+
+    sel.append('button')
+        .attr('id', 'sink')
+        .text('Sink')
+        .on('click', () => sink(bar, data))
+
+    sel.append('button')
+        .attr('id', 'float')
+        .text('Float')
+        .on('click', () => float(bar, data))
+
 }
 
 function float(bar, data) {

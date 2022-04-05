@@ -21,3 +21,22 @@ h1 {
     position: absolute;			
     text-align: center;			
 }
+
+#controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+button {
+    border: 0;
+    background: rgb(28, 140, 184);
+    color: white;
+    cursor: pointer;
+    padding: 10px 20px;
+    margin: 10px;
+}
+
+#sink {
+    background: rgb(94, 94, 94);
+}
