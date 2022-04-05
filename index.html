@@ -10,7 +10,18 @@
   <body>
     <h1>Assignment 5: The Floating Stacked Barchart Idiom</h1>
     <div id="svg-container"></div> 
-    <div id="controls"></div>
+    <div id="controls">
+      <div>
+        <div>
+          <p>Num Bars</p>
+          <input type="range" min="1" max="10" value="3" class="slider" id="num-bars">
+        </div>
+        <div>
+          <p>Num Components</p>
+          <input type="range" min="1" max="10" value="3" class="slider" id="num-components">
+        </div>
+      </div>
+    </div>
     <script src="./d3.v7.min.js"></script>
     <script src="./app.js"></script>
   </body>

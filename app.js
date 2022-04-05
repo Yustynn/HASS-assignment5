@@ -12,41 +12,65 @@ const SPACING = {
     width: 100,
     maxHeight: 0.75*HEIGHT
 }
-const TRANSITION_DURATION = 1000
+const TRANSITION_DURATION = 500
+
+const state = {
+    data: null,
+    numBars: 3,
+    numComponents: 3,
+}
 
 
 function main() {
     setup()
 
-    const data = mkData(5, 3)
-    console.log('data', data)
+    setData(state.numBars, state.numComponents)
 
-    mkLegend(data)
-    const bar = mkChart(data)
+    mkLegend()
+    setChart()
     
-    addControls(bar, data)
+    addControls()
 }
 
-function addControls(bar, data) {
+function addControls() {
     const sel = d3.select('#controls')
 
     sel.append('button')
         .attr('id', 'sink')
         .text('Sink')
-        .on('click', () => sink(bar, data))
+        .on('click', () => sink())
 
     sel.append('button')
         .attr('id', 'float')
         .text('Float')
-        .on('click', () => float(bar, data))
+        .on('click', () => float())
+
+    sel.select('#num-bars')
+        .on('change', e => {
+            state.numBars = +e.target.value
+            setData(state.numBars, state.numComponents)
+            mkLegend()
+            setChart()
+        })
+
+    sel.select('#num-components')
+        .on('change', e => {
+            state.numComponents = +e.target.value
+            setData(state.numBars, state.numComponents)
+            mkLegend()
+            setChart()
+        })
+
 
 }
 
-function float(bar, data) {
+function float() {
+    const { data } = state
     const scale = SPACING.maxHeight / (data.maxs.total + SPACING.floating * data.components.length)
     const t = d3.transition().duration(TRANSITION_DURATION)
 
-    bar
+    // bar
+    d3.selectAll('.bar')
         .each(function(entries) {
             let currY = HEIGHT
 
@@ -63,11 +87,12 @@ function float(bar, data) {
 
 }
 
-function sink(bar, data) {
+function sink() {
+    const { data } = state
     const scale = SPACING.maxHeight / (data.maxs.total + SPACING.floating * data.components.length)
     const t = d3.transition().duration(TRANSITION_DURATION)
 
-    bar
+    d3.selectAll('.bar')
         .each(function(entries) {
             let currY = HEIGHT
 
@@ -83,9 +108,13 @@ function sink(bar, data) {
 
 
 
-function mkLegend(data) {
+function mkLegend() {
     const R = 10
     const x = WIDTH - 100
+    const { data } = state 
+
+    d3.select('#legends').remove()
+
     d3.select('svg')
         .append('g')
         .attr('id', 'legends')
@@ -110,7 +139,7 @@ function mkLegend(data) {
             })
 }
 
-function mkData(numBars = 3, numComponents = 3) {
+function setData(numBars = 3, numComponents = 3) {
     const data = []
     const maxs = {}
     const components = COMPONENT_NAMES.slice(0, numComponents)
@@ -142,11 +171,12 @@ function mkData(numBars = 3, numComponents = 3) {
     }
     
 
-    return {
+    state.data = {
         components,
         data: data.sort((a, b) => b.total - a.total),
         maxs
     }
+    console.log('state.data updated', state.data)
 }
 
 
@@ -157,39 +187,97 @@ function setup() {
         .attr('height', HEIGHT)
         .attr('viewbox', [0, 0, WIDTH, HEIGHT])
 
-    const bars = svg.append('g').attr('id', 'bars')
+    svg.append('g').attr('id', 'bars')
 }
 
-let count = 0
-function mkChart(data) {
+function setChart() {
+    const { data } = state
     const scale = SPACING.maxHeight / (data.maxs.total + SPACING.floating * data.components.length)
     const xStart = (WIDTH - data.data.length * (SPACING.between + SPACING.width)) / 2
+    const t = d3.transition().duration(TRANSITION_DURATION)
 
-    const bar = d3.select('#bars').selectAll('g')
+    let count = 0
+    d3.select('#bars').selectAll('g').remove()
+    d3.select('#bars').selectAll('g')
         .data(data.data, d => d.key)
-        .join('g')
-            .classed('bar' ,true)
-            .attr('id', () => { count++; return count })
-            .each(function(entries, idx) {
-                const x = xStart + idx * (SPACING.width + SPACING.between)
-                let currY = HEIGHT
+        .join(
+            enter => {
+                enter.append('g')
+                    .classed('bar' ,true)
+                    .attr('id', () => { count++; return count })
+                    .each(function(entries, idx) {
+                        const x = xStart + idx * (SPACING.width + SPACING.between)
+                        let currY = HEIGHT
 
-                data.components.forEach((component, idx) => {
-                    const value = entries[component] * scale
-                    currY -= value
+                        data.components.forEach((component, idx) => {
+                            const value = entries[component] * scale
+                            currY -= value
 
-                    d3.select(this).append('rect')
-                        .classed(component, true)
-                        .attr('x', x)
-                        .attr('y', currY)
-                        .attr('fill', COLOR_SCALE[idx])
-                        .attr('width', SPACING.width)
-                        .attr('height', value)
+                            d3.select(this).append('rect')
+                                .classed(component, true)
+                                .attr('x', x)
+                                .attr('y', currY)
+                                .attr('fill', COLOR_SCALE[idx])
+                                .attr('width', SPACING.width)
+                                .attr('height', value)
+                                .attr('opacity', 0)
+                                .transition(t)
+                                .attr('opacity', 1)
+                        })
+                    })
+            },
+            update => {
+                update.each(function(entries, idx) {
+                    const x = xStart + idx * (SPACING.width + SPACING.between)
+                    let currY = HEIGHT
+                    console.log(entries)
+
+
+                    data.components.forEach((component, idx) => {
+                        const value = entries[component] * scale
+                        currY -= value
+
+                        d3.select(this).selectAll('.' + component)
+                            .join(
+                                enter => {
+                                    enter.append('rect')
+                                        .classed(component, true)
+                                        .transition(t)
+                                        .attr('x', x)
+                                        .attr('y', currY)
+                                        .attr('fill', COLOR_SCALE[idx])
+                                        .attr('width', SPACING.width)
+                                        .attr('height', value)
+                                },
+                                update => {
+                                    update
+                                        .transition(t)
+                                        .attr('x', x)
+                                        .attr('y', currY)
+                                        .attr('fill', COLOR_SCALE[idx])
+                                        .attr('width', SPACING.width)
+                                        .attr('height', value)
+                                },
+                                exit => {
+                                    exit
+                                        .attr('opacity', 1)
+                                        .transition(t)
+                                        .attr('opacity', 0)
+                                        .remove()
+                                }
+                            )
+                    })
                 })
-            })
-
-        return bar
-
+            },
+            exit => {
+                exit
+                    .attr('opacity', 1)
+                    .transition(t)
+                    .attr('opacity', 0)
+                    .attr('y', 0)
+                    .remove()
+            }
+        )
 }
 // Make normal stacked barchart
 // Floating mode
