@@ -8,7 +8,7 @@ const COMPONENT_NAMES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('')
 const COLOR_SCALE = d3.schemeCategory10
 const SPACING = {
     between: 30,
-    floating: 10,
+    floating: 20,
     width: 100,
     maxHeight: 0.75*HEIGHT
 }
@@ -18,7 +18,7 @@ const TRANSITION_DURATION = 1000
 function main() {
     setup()
 
-    const data = mkData(5, 5)
+    const data = mkData(5, 3)
     console.log('data', data)
 
     mkLegend(data)
@@ -140,8 +140,13 @@ function mkData(numBars = 3, numComponents = 3) {
         
         data.push(datum)
     }
+    
 
-    return { components, data, maxs }
+    return {
+        components,
+        data: data.sort((a, b) => b.total - a.total),
+        maxs
+    }
 }
 
 
