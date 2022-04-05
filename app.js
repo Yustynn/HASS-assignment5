@@ -1,9 +1,12 @@
-// range for components
+const [WIDTH, HEIGHT] = [1300, 700]
 const COMPONENT_RANGE = [0, 100]
 const COMPONENT_NAMES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('')
 
-// Make random data generating function
-    // Params: Num bars, num components per bar
+function main() {
+    setup()
+
+    const data = mkData(3, 3)
+}
 
 function mkData(numBars = 3, numComponents = 3) {
     const result = {
@@ -29,8 +32,16 @@ function mkData(numBars = 3, numComponents = 3) {
     return result
 }
 
-console.log(mkData(3, 3))
 
+
+function setup() {
+    d3.select('#svg-container').append('svg')
+        .attr('width', WIDTH)
+        .attr('height', HEIGHT)
+        .attr('viewbox', [0, 0, WIDTH, HEIGHT])
+}
 // Setup svg
 // Make normal stacked barchart
 // Floating mode
+
+main()
