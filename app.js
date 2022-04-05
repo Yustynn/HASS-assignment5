@@ -1,13 +1,18 @@
 const [WIDTH, HEIGHT] = [1300, 700]
+
+// for data gen
 const COMPONENT_RANGE = [0, 100]
 const COMPONENT_NAMES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('')
 
+// for theming
+const COLOR_SCALE = d3.schemeCategory10
 const SPACING = {
     between: 30,
     floating: 10,
     width: 100,
-    maxHeight: HEIGHT*0.75
+    maxHeight: 0.75*HEIGHT
 }
+
 
 function main() {
     setup()
@@ -16,6 +21,34 @@ function main() {
     console.log('data', data)
 
     mkChart(data)
+    mkLegend(data)
+}
+
+function mkLegend(data) {
+    const R = 10
+    const x = WIDTH - 100
+    d3.select('svg')
+        .append('g')
+        .attr('id', 'legends')
+        .selectAll('g')
+        .data(data.components)
+        .join('g')
+            .classed('legend', true)
+            .each(function(component, idx) {
+                const sel = d3.select(this)
+                const y = idx * 30 + 10
+                sel.append('circle')
+                    .attr('fill', COLOR_SCALE[idx])
+                    .attr('r', R)
+                    .attr('cx', x)
+                    .attr('cy', y)
+                sel.append('text')
+                    .text(component)
+                    .attr('fill', COLOR_SCALE[idx])
+                    .attr('x', x + 20)
+                    .attr('y', y + R/2)
+                    .attr('text-anchor', 'center')
+            })
 }
 
 function mkData(numBars = 3, numComponents = 3) {
@@ -84,7 +117,7 @@ function mkChart(data) {
                     d3.select(this).append('rect')
                         .attr('x', x)
                         .attr('y', currY)
-                        .attr('fill', d3.schemeCategory10[idx])
+                        .attr('fill', COLOR_SCALE[idx])
                         .attr('width', SPACING.width)
                         .attr('height', value)
                 })
