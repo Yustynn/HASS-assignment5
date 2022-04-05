@@ -4,14 +4,18 @@ const COMPONENT_NAMES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('')
 
 const SPACING = {
     between: 30,
-    floating: 10
+    floating: 10,
+    width: 100,
+    maxHeight: HEIGHT*0.75
 }
 
 function main() {
     setup()
 
-    const data = mkData(3, 3)
+    const data = mkData(5, 5)
     console.log('data', data)
+
+    mkChart(data)
 }
 
 function mkData(numBars = 3, numComponents = 3) {
@@ -20,7 +24,7 @@ function mkData(numBars = 3, numComponents = 3) {
     const components = COMPONENT_NAMES.slice(0, numComponents)
 
     for (let i = 0; i < numBars; i++) {
-        const datum = {}
+        const datum = { key: i }
         let total = 0
 
         for (const component of components) {
@@ -51,12 +55,44 @@ function mkData(numBars = 3, numComponents = 3) {
 
 
 function setup() {
-    d3.select('#svg-container').append('svg')
+    const svg = d3.select('#svg-container').append('svg')
         .attr('width', WIDTH)
         .attr('height', HEIGHT)
         .attr('viewbox', [0, 0, WIDTH, HEIGHT])
+
+    const bars = svg.append('g').attr('id', 'bars')
 }
-// Setup svg
+
+let count = 0
+function mkChart(data) {
+    const scale = SPACING.maxHeight / data.maxs.total
+    const xStart = (WIDTH - data.data.length * (SPACING.between + SPACING.width)) / 2
+
+    d3.select('#bars').selectAll('g')
+        .data(data.data, d => d.key)
+        .join('g')
+            .classed('bar' ,true)
+            .attr('id', () => { count++; return count })
+            .each(function(entries, idx) {
+                const x = xStart + idx * (SPACING.width + SPACING.between)
+                let currY = HEIGHT
+
+                data.components.forEach((component, idx) => {
+                    const value = entries[component] * scale
+                    currY -= value
+
+                    d3.select(this).append('rect')
+                        .attr('x', x)
+                        .attr('y', currY)
+                        .attr('fill', d3.schemeCategory10[idx])
+                        .attr('width', SPACING.width)
+                        .attr('height', value)
+                })
+
+
+            })
+
+}
 // Make normal stacked barchart
 // Floating mode
 
