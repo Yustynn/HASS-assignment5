@@ -12,6 +12,7 @@ const SPACING = {
     width: 100,
     maxHeight: 0.75*HEIGHT
 }
+const TRANSITION_DURATION = 1000
 
 
 function main() {
@@ -20,9 +21,52 @@ function main() {
     const data = mkData(5, 5)
     console.log('data', data)
 
-    mkChart(data)
     mkLegend(data)
+    const bar = mkChart(data)
+    float(bar, data)
+    setTimeout(() => sink(bar, data), TRANSITION_DURATION)
 }
+
+function float(bar, data) {
+    const scale = SPACING.maxHeight / (data.maxs.total + SPACING.floating * data.components.length)
+    const t = d3.transition().duration(TRANSITION_DURATION)
+
+    bar
+        .each(function(entries) {
+            let currY = HEIGHT
+
+            data.components.forEach((component) => {
+                const maxValue = data.maxs[component] * scale
+                const value = entries[component] * scale
+                currY -= value
+                d3.select(this).select('.' + component)
+                    .transition(t)
+                    .attr('y', currY)
+                currY +=  value - maxValue - SPACING.floating
+            })
+        })
+
+}
+
+function sink(bar, data) {
+    const scale = SPACING.maxHeight / (data.maxs.total + SPACING.floating * data.components.length)
+    const t = d3.transition().duration(TRANSITION_DURATION)
+
+    bar
+        .each(function(entries) {
+            let currY = HEIGHT
+
+            data.components.forEach((component) => {
+                const value = entries[component] * scale
+                currY -= value
+                d3.select(this).select('.' + component)
+                    .transition(t)
+                    .attr('y', currY)
+            })
+        })
+}
+
+
 
 function mkLegend(data) {
     const R = 10
@@ -98,10 +142,10 @@ function setup() {
 
 let count = 0
 function mkChart(data) {
-    const scale = SPACING.maxHeight / data.maxs.total
+    const scale = SPACING.maxHeight / (data.maxs.total + SPACING.floating * data.components.length)
     const xStart = (WIDTH - data.data.length * (SPACING.between + SPACING.width)) / 2
 
-    d3.select('#bars').selectAll('g')
+    const bar = d3.select('#bars').selectAll('g')
         .data(data.data, d => d.key)
         .join('g')
             .classed('bar' ,true)
@@ -115,15 +159,16 @@ function mkChart(data) {
                     currY -= value
 
                     d3.select(this).append('rect')
+                        .classed(component, true)
                         .attr('x', x)
                         .attr('y', currY)
                         .attr('fill', COLOR_SCALE[idx])
                         .attr('width', SPACING.width)
                         .attr('height', value)
                 })
-
-
             })
+
+        return bar
 
 }
 // Make normal stacked barchart
