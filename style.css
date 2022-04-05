@@ -11,6 +11,20 @@ h1 {
     text-align: center;
 }
 
+button {
+    border: 0;
+    background: rgb(28, 140, 184);
+    color: white;
+    cursor: pointer;
+    padding: 10px 30px;
+    margin: 10px;
+}
+
+.sliders {
+    display: flex;
+    margin-right: 10px;
+}
+
 #svg-container {
     display: flex;
     justify-content: center;
@@ -32,15 +46,10 @@ h1 {
     margin-top: 50px;
 }
 
-button {
-    border: 0;
-    background: rgb(28, 140, 184);
-    color: white;
-    cursor: pointer;
-    padding: 10px 20px;
-    margin: 10px;
-}
-
 #sink {
     background: rgb(94, 94, 94);
+}
+
+#reroll {
+    background: purple;
 }

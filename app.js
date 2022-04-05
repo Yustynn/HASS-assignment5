@@ -24,10 +24,9 @@ const state = {
 function main() {
     setup()
 
-    setData(state.numBars, state.numComponents)
-
+    setData()
     mkLegend()
-    setChart()
+    mkChart()
     
     addControls()
 }
@@ -45,20 +44,34 @@ function addControls() {
         .text('Float')
         .on('click', () => float())
 
-    sel.select('#num-bars')
-        .on('change', e => {
-            state.numBars = +e.target.value
-            setData(state.numBars, state.numComponents)
+    sel.append('button')
+        .attr('id', 'reroll')
+        .text('Reroll')
+        .on('click', () => {
+            setData()
             mkLegend()
-            setChart()
+            mkChart()
         })
 
-    sel.select('#num-components')
+
+    sel.select('.num-bars input')
+        .on('change', e => {
+            state.numBars = +e.target.value
+            setData()
+            mkLegend()
+            mkChart()
+
+            sel.select('.num-bars p').text(`Num Bars: ${state.numBars}`)
+        })
+
+    sel.select('.num-components input')
         .on('change', e => {
             state.numComponents = +e.target.value
-            setData(state.numBars, state.numComponents)
+            setData()
             mkLegend()
-            setChart()
+            mkChart()
+
+            sel.select('.num-components p').text(`Num Components: ${state.numComponents}`)
         })
 
 
@@ -139,7 +152,8 @@ function mkLegend() {
             })
 }
 
-function setData(numBars = 3, numComponents = 3) {
+function setData() {
+    const { numBars, numComponents } = state
     const data = []
     const maxs = {}
     const components = COMPONENT_NAMES.slice(0, numComponents)
@@ -176,7 +190,6 @@ function setData(numBars = 3, numComponents = 3) {
         data: data.sort((a, b) => b.total - a.total),
         maxs
     }
-    console.log('state.data updated', state.data)
 }
 
 
@@ -188,9 +201,12 @@ function setup() {
         .attr('viewbox', [0, 0, WIDTH, HEIGHT])
 
     svg.append('g').attr('id', 'bars')
+
+    d3.select('#controls .num-bars p').text(`Num Bars: ${state.numBars}`)
+    d3.select('#controls .num-components p').text(`Num Components: ${state.numComponents}`)
 }
 
-function setChart() {
+function mkChart() {
     const { data } = state
     const scale = SPACING.maxHeight / (data.maxs.total + SPACING.floating * data.components.length)
     const xStart = (WIDTH - data.data.length * (SPACING.between + SPACING.width)) / 2
