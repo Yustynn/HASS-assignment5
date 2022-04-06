@@ -154,13 +154,13 @@ function mkLegend() {
 
 function setData() {
     const { numBars, numComponents } = state
-    const data = []
+    const unsortedData = []
     const maxs = {}
     const components = COMPONENT_NAMES.slice(0, numComponents)
 
     for (let i = 0; i < numBars; i++) {
-        const datum = { key: i }
         let total = 0
+        const datum = {}
 
         for (const component of components) {
             // compute value
@@ -181,13 +181,16 @@ function setData() {
         if (maxs['total'] == undefined) maxs['total'] = total
         else maxs['total'] = Math.max(maxs['total'], total)
         
-        data.push(datum)
+        unsortedData.push(datum)
     }
     
+    const data = unsortedData
+        .sort((a, b) => b.total - a.total)
+        .map((d, i) => ({...d, key: i}))
 
     state.data = {
         components,
-        data: data.sort((a, b) => b.total - a.total),
+        data,
         maxs
     }
 }
