@@ -1,7 +1,7 @@
 const [WIDTH, HEIGHT] = [1300, 700]
 
 // for data gen
-const COMPONENT_RANGE = [0, 100]
+const COMPONENT_RANGE = [0, 150]
 const COMPONENT_NAMES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('')
 
 // for theming
@@ -10,7 +10,6 @@ const SPACING = {
     between: 30,
     floating: 20,
     width: 100,
-    maxHeight: 0.75*HEIGHT
 }
 const TRANSITION_DURATION = 500
 
@@ -79,7 +78,6 @@ function addControls() {
 
 function float() {
     const { data } = state
-    const scale = SPACING.maxHeight / (data.maxs.total + SPACING.floating * data.components.length)
     const t = d3.transition().duration(TRANSITION_DURATION)
 
     // bar
@@ -88,13 +86,13 @@ function float() {
             let currY = HEIGHT
 
             data.components.forEach((component) => {
-                const maxValue = data.maxs[component] * scale
-                const value = entries.absolute[component] * scale
-                currY -= value
+                const maxValue = data.maxs[component]
+                const { height } = entries[component]
+                currY -= height
                 d3.select(this).select('.' + component)
                     .transition(t)
                     .attr('y', currY)
-                currY +=  value - maxValue - SPACING.floating
+                currY +=  height - maxValue - SPACING.floating
             })
         })
 
@@ -102,7 +100,6 @@ function float() {
 
 function sink() {
     const { data } = state
-    const scale = SPACING.maxHeight / (data.maxs.total + SPACING.floating * data.components.length)
     const t = d3.transition().duration(TRANSITION_DURATION)
 
     d3.selectAll('.bar')
@@ -110,8 +107,8 @@ function sink() {
             let currY = HEIGHT
 
             data.components.forEach((component) => {
-                const value = entries.absolute[component] * scale
-                currY -= value
+                const { height } = entries[component]
+                currY -= height
                 d3.select(this).select('.' + component)
                     .transition(t)
                     .attr('y', currY)
@@ -160,7 +157,7 @@ function setData() {
 
     for (let i = 0; i < numBars; i++) {
         let total = 0
-        const datum = { absolute: {}, runningTotal: {} }
+        const datum = {}
 
         for (const component of components) {
             // compute value
@@ -173,8 +170,7 @@ function setData() {
 
             // set value and update total
             total += value
-            datum.absolute[component] = value
-            datum.runningTotal[component] = total
+            datum[component] = { height: value, y: HEIGHT - total }
         }
         datum['total'] = total
 
@@ -212,82 +208,82 @@ function setup() {
 
 function mkChart() {
     const { data } = state
-    const scale = SPACING.maxHeight / (data.maxs.total + SPACING.floating * data.components.length)
     const xStart = (WIDTH - data.data.length * (SPACING.between + SPACING.width)) / 2
     const t = d3.transition().duration(TRANSITION_DURATION)
 
-    let count = 0
-    d3.select('#bars').selectAll('g').remove()
     d3.select('#bars').selectAll('g')
         .data(data.data, d => d.key)
         .join(
             enter => {
                 enter.append('g')
                     .classed('bar' ,true)
-                    .attr('id', () => { count++; return count })
-                    .each(function(entries, idx) {
-                        const x = xStart + idx * (SPACING.width + SPACING.between)
-                        let currY = HEIGHT
-
-                        data.components.forEach((component, idx) => {
-                            const value = entries.absolute[component] * scale
-                            currY -= value
-
-                            d3.select(this).append('rect')
-                                .classed(component, true)
-                                .attr('x', x)
-                                .attr('y', currY)
-                                .attr('fill', COLOR_SCALE[idx])
-                                .attr('width', SPACING.width)
-                                .attr('height', value)
-                                .attr('opacity', 0)
-                                .transition(t)
-                                .attr('opacity', 1)
-                        })
-                    })
+                    .attr('id', d => d.key)
+                    .attr('transform', d => `translate(${xStart + d.key * (SPACING.width + SPACING.between)}, 0)`)
+                    .selectAll('rect')
+                    .data(d => Object.entries(d), ([k, _]) => k)
+                    .join('rect')
+                        .attr('class', ([k, _]) => k)
+                        .attr('y', ([_, { y }]) => y)
+                        .attr('fill', (_, idx) => COLOR_SCALE[idx])
+                        .attr('width', SPACING.width)
+                        .attr('height', ([_, { height }]) => height)
+                        .attr('opacity', 0)
+                        .transition(t)
+                        .attr('opacity', 1)
             },
             update => {
-                update.each(function(entries, idx) {
-                    const x = xStart + idx * (SPACING.width + SPACING.between)
-                    let currY = HEIGHT
-                    console.log(entries)
+                update
+                    .transition(t)
+                    .attr('transform', d => `translate(${xStart + d.key * (SPACING.width + SPACING.between)}, 0)`)
+                update
+                    .selectAll('rect')
+                    .data(d => Object.entries(d), ([k, _]) => k)
+                    .join('rect')
+                        .attr('class', ([k, _]) => k)
+                        .transition(t)
+                        .attr('y', ([_, { y }]) => y)
+                        .attr('fill', (_, idx) => COLOR_SCALE[idx])
+                        .attr('width', SPACING.width)
+                        .attr('height', ([_, { height }]) => height)
 
+                // update.each(function(entries, idx) {
+                //     const x = xStart + idx * (SPACING.width + SPACING.between)
+                //     console.log(entries)
 
-                    data.components.forEach((component, idx) => {
-                        const value = entries.absolute[component] * scale
-                        currY -= value
+                //     data.components.forEach((component, idx) => {
+                //         const { height, y} = entries[component]
 
-                        d3.select(this).selectAll('.' + component)
-                            .join(
-                                enter => {
-                                    enter.append('rect')
-                                        .classed(component, true)
-                                        .transition(t)
-                                        .attr('x', x)
-                                        .attr('y', currY)
-                                        .attr('fill', COLOR_SCALE[idx])
-                                        .attr('width', SPACING.width)
-                                        .attr('height', value)
-                                },
-                                update => {
-                                    update
-                                        .transition(t)
-                                        .attr('x', x)
-                                        .attr('y', currY)
-                                        .attr('fill', COLOR_SCALE[idx])
-                                        .attr('width', SPACING.width)
-                                        .attr('height', value)
-                                },
-                                exit => {
-                                    exit
-                                        .attr('opacity', 1)
-                                        .transition(t)
-                                        .attr('opacity', 0)
-                                        .remove()
-                                }
-                            )
-                    })
-                })
+                //         d3.select(this).selectAll('.' + component)
+                //             .join(
+                //                 enter => {
+                //                     enter.append('rect')
+                //                         .classed(component, true)
+                //                         .transition(t)
+                //                         .attr('x', x)
+                //                         .attr('y', y)
+                //                         .attr('fill', COLOR_SCALE[idx])
+                //                         .attr('width', SPACING.width)
+                //                         .attr('height', height)
+                //                 },
+                //                 update => {
+                //                     update
+                //                         .transition(t)
+                //                         .attr('x', x)
+                //                         .attr('y', y)
+                //                         .attr('fill', COLOR_SCALE[idx])
+                //                         .attr('width', SPACING.width)
+                //                         .attr('height', height)
+                //                 },
+                //                 exit => {
+                //                     exit
+                //                         .attr('opacity', 1)
+                //                         .transition(t)
+                //                         .attr('opacity', 0)
+                //                         .remove()
+                //                 }
+                //             )
+                //     })
+                // })
             },
             exit => {
                 exit
