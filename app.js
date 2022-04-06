@@ -266,44 +266,6 @@ function mkChart() {
                         .attr('width', SPACING.width)
                         .attr('height', ([_, { height }]) => height)
 
-                // update.each(function(entries, idx) {
-                //     const x = xStart + idx * (SPACING.width + SPACING.between)
-                //     console.log(entries)
-
-                //     data.components.forEach((component, idx) => {
-                //         const { height, y} = entries[component]
-
-                //         d3.select(this).selectAll('.' + component)
-                //             .join(
-                //                 enter => {
-                //                     enter.append('rect')
-                //                         .classed(component, true)
-                //                         .transition(t)
-                //                         .attr('x', x)
-                //                         .attr('y', y)
-                //                         .attr('fill', COLOR_SCALE[idx])
-                //                         .attr('width', SPACING.width)
-                //                         .attr('height', height)
-                //                 },
-                //                 update => {
-                //                     update
-                //                         .transition(t)
-                //                         .attr('x', x)
-                //                         .attr('y', y)
-                //                         .attr('fill', COLOR_SCALE[idx])
-                //                         .attr('width', SPACING.width)
-                //                         .attr('height', height)
-                //                 },
-                //                 exit => {
-                //                     exit
-                //                         .attr('opacity', 1)
-                //                         .transition(t)
-                //                         .attr('opacity', 0)
-                //                         .remove()
-                //                 }
-                //             )
-                //     })
-                // })
             },
             exit => {
                 exit
@@ -315,7 +277,5 @@ function mkChart() {
             }
         )
 }
-// Make normal stacked barchart
-// Floating mode
 
 main()
