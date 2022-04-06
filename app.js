@@ -89,7 +89,7 @@ function float() {
 
             data.components.forEach((component) => {
                 const maxValue = data.maxs[component] * scale
-                const value = entries[component] * scale
+                const value = entries.absolute[component] * scale
                 currY -= value
                 d3.select(this).select('.' + component)
                     .transition(t)
@@ -110,7 +110,7 @@ function sink() {
             let currY = HEIGHT
 
             data.components.forEach((component) => {
-                const value = entries[component] * scale
+                const value = entries.absolute[component] * scale
                 currY -= value
                 d3.select(this).select('.' + component)
                     .transition(t)
@@ -160,7 +160,7 @@ function setData() {
 
     for (let i = 0; i < numBars; i++) {
         let total = 0
-        const datum = {}
+        const datum = { absolute: {}, runningTotal: {} }
 
         for (const component of components) {
             // compute value
@@ -172,8 +172,9 @@ function setData() {
             else maxs[component] = Math.max(maxs[component], value)
 
             // set value and update total
-            datum[component] = value
             total += value
+            datum.absolute[component] = value
+            datum.runningTotal[component] = total
         }
         datum['total'] = total
 
@@ -229,7 +230,7 @@ function mkChart() {
                         let currY = HEIGHT
 
                         data.components.forEach((component, idx) => {
-                            const value = entries[component] * scale
+                            const value = entries.absolute[component] * scale
                             currY -= value
 
                             d3.select(this).append('rect')
@@ -253,7 +254,7 @@ function mkChart() {
 
 
                     data.components.forEach((component, idx) => {
-                        const value = entries[component] * scale
+                        const value = entries.absolute[component] * scale
                         currY -= value
 
                         d3.select(this).selectAll('.' + component)
