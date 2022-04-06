@@ -52,7 +52,6 @@ function addControls() {
             mkChart()
         })
 
-
     sel.select('.num-bars input')
         .on('change', e => {
             state.numBars = +e.target.value
@@ -82,20 +81,14 @@ function float() {
 
     // bar
     d3.selectAll('.bar')
-        .each(function(entries) {
-            let currY = HEIGHT
+        .selectAll('rect')
+        .transition(t)
+        .attr('y', ([component, d], idx) => {
+            if (['total', 'key'].includes(component)) return
+            const { y, height } = data.maxs[component]
 
-            data.components.forEach((component) => {
-                const maxValue = data.maxs[component]
-                const { height } = entries[component]
-                currY -= height
-                d3.select(this).select('.' + component)
-                    .transition(t)
-                    .attr('y', currY)
-                currY +=  height - maxValue - SPACING.floating
-            })
+            return y + height - idx*SPACING.floating - d.height
         })
-
 }
 
 function sink() {
@@ -150,10 +143,32 @@ function mkLegend() {
 }
 
 function setData() {
+    // DATA FORMAT
+    // -----------
+    // {
+    //     components: ["A", "B", ...],
+    //     data: [
+    //         {
+    //             A: { height: 123, y: 300},
+    //             B: { height: 37, y: 123},
+    //             ...,
+    //             total: 712
+    //         },
+    //         ...
+    //     ],
+    //     maxs: {
+    //         A: { height: 123, y: 318 } // min y, technically
+    //         ...
+    //     }
+
+    // }
+
     const { numBars, numComponents } = state
     const unsortedData = []
-    const maxs = {}
     const components = COMPONENT_NAMES.slice(0, numComponents)
+
+    const maxs = {}
+    for (const component of components) maxs[component] = { height: -Infinity, y: -Infinity }
 
     for (let i = 0; i < numBars; i++) {
         let total = 0
@@ -165,14 +180,19 @@ function setData() {
             const value = Math.round(Math.random() * interval + COMPONENT_RANGE[0])
             
             // update max
-            if (maxs[component] == undefined) maxs[component] = value
-            else maxs[component] = Math.max(maxs[component], value)
+            maxs[component].height = Math.max(maxs[component].height, value)
 
             // set value and update total
             total += value
             datum[component] = { height: value, y: HEIGHT - total }
         }
         datum['total'] = total
+
+        // update maxs[component].y with min y
+        maxs[components[0]].y = HEIGHT - maxs[components[0]].height
+        for (let i = 1; i < components.length; i++) {
+            maxs[components[i]].y = maxs[components[i-1]].y - maxs[components[i]].height
+        }
 
         // update max total
         if (maxs['total'] == undefined) maxs['total'] = total
@@ -184,7 +204,7 @@ function setData() {
     const data = unsortedData
         .sort((a, b) => b.total - a.total)
         .map((d, i) => ({...d, key: i}))
-
+    
     state.data = {
         components,
         data,
