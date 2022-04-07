@@ -235,12 +235,12 @@ function mkChart() {
                     .data(d => Object.entries(d), ([k, _]) => k)
                     .join('rect')
                         .attr('class', ([k, _]) => k)
-                        .attr('y', ([_, { y }]) => y)
                         .attr('fill', (_, idx) => COLOR_SCALE[idx])
                         .attr('width', SPACING.width)
                         .attr('height', ([_, { height }]) => height)
                         .attr('opacity', 0)
                         .transition(t)
+                        .attr('y', ([_, { y }]) => y)
                         .attr('opacity', 1)
             },
             update => {
@@ -250,21 +250,43 @@ function mkChart() {
                 update
                     .selectAll('rect')
                     .data(d => Object.entries(d), ([k, _]) => k)
-                    .join('rect')
+                    .join(
+                        enter => enter.append('rect')
+                            .attr('class', ([k, _]) => k)
+                            .attr('opacity', 0)
+                            .transition(t)
+                            .attr('opacity', 1)
+                            .attr('y', ([_, { y }]) => y)
+                            .attr('fill', (_, idx) => COLOR_SCALE[idx])
+                            .attr('width', SPACING.width)
+                            .attr('height', ([_, { height }]) => height),
+                        update => update
+                            .transition(t)
+                            .attr('y', ([_, { y }]) => y)
+                            .attr('fill', (_, idx) => COLOR_SCALE[idx])
+                            .attr('width', SPACING.width)
+                            .attr('height', ([_, { height }]) => height),
+                        exit => exit
+                            .attr('opacity', 1)
+                            .transition(t)
+                            .attr('y', ([_, d]) => -d.height)
+                            .attr('opacity', 0)
+                            .remove()
+                    )
                         .attr('class', ([k, _]) => k)
                         .transition(t)
                         .attr('y', ([_, { y }]) => y)
                         .attr('fill', (_, idx) => COLOR_SCALE[idx])
                         .attr('width', SPACING.width)
                         .attr('height', ([_, { height }]) => height)
-
             },
             exit => {
                 exit
                     .attr('opacity', 1)
                     .transition(t)
                     .attr('opacity', 0)
-                    .attr('y', 0)
+                    // .attr('y', 0)
+                    .attr('transform', d => `translate(${xStart + d.key * (SPACING.width + SPACING.between)}, ${HEIGHT+300})`)
                     .remove()
             }
         )
