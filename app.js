@@ -96,17 +96,9 @@ function sink() {
     const t = d3.transition().duration(TRANSITION_DURATION)
 
     d3.selectAll('.bar')
-        .each(function(entries) {
-            let currY = HEIGHT
-
-            data.components.forEach((component) => {
-                const { height } = entries[component]
-                currY -= height
-                d3.select(this).select('.' + component)
-                    .transition(t)
-                    .attr('y', currY)
-            })
-        })
+        .selectAll('rect')
+        .transition(t)
+        .attr('y', ([_, d]) => d.y)
 }
 
 
